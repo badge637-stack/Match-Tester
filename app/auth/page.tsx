@@ -1,10 +1,10 @@
 'use client'
 
+import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-export default function AuthPage() {
+function AuthInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const role = searchParams.get('role') // 'player' | 'fan'
@@ -29,7 +29,6 @@ export default function AuthPage() {
       return
     }
 
-    // TEMP: store role in user metadata
     if (role) {
       await supabase.auth.updateUser({
         data: { role },
@@ -73,5 +72,13 @@ export default function AuthPage() {
         Create account
       </button>
     </main>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<p style={{ padding: 24 }}>Loading…</p>}>
+      <AuthInner />
+    </Suspense>
   )
 }
