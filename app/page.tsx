@@ -11,6 +11,14 @@ export default function Home() {
 
   const signIn = async () => {
     setMessage(null)
+    console.log(
+  'SUPABASE URL:',
+  process.env.NEXT_PUBLIC_SUPABASE_URL
+)
+console.log(
+  'SUPABASE KEY:',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 10)
+)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
