@@ -1,36 +1,47 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-export default function HomePage() {
-  const { user, profile, loading } = useAuth()
+export default function Home() {
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (loading) return
+    if (authLoading) return
 
-    // Not signed in → go to auth
     if (!user) {
-      router.replace('/auth')
+      router.replace('/welcome')
       return
     }
 
-    // Signed in but no profile yet
-    if (!profile) {
-      router.replace('/profile/create')
-      return
+    const checkProfile = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('club_id')
+        .eq('id', user.id)
+        .single()
+
+      if (error || !data) {
+        router.replace('/profile/create')
+        return
+      }
+
+      if (!data.club_id) {
+        router.replace('/club/select')
+        return
+      }
+
+      setLoading(false)
     }
 
-    // Profile exists but no club selected
-    if (!profile.club_id) {
-      router.replace('/club/select')
-      return
-    }
-  }, [user, profile, loading, router])
+    checkProfile()
+  }, [user, authLoading, router])
 
-  if (loading) {
+  if (authLoading || loading) {
     return <p style={{ padding: 24 }}>Loading…</p>
   }
 
@@ -38,6 +49,3 @@ export default function HomePage() {
     <main style={{ padding: 24 }}>
       <h1>Project 90</h1>
       <p>Home (temporary)</p>
-    </main>
-  )
-}
