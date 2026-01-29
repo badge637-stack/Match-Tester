@@ -21,7 +21,7 @@ export default function SelectClubPage() {
   useEffect(() => {
     if (!user) return
 
-    const loadTeams = async () => {
+    const fetchTeams = async () => {
       const { data, error } = await supabase
         .from('teams')
         .select('id, name')
@@ -29,7 +29,7 @@ export default function SelectClubPage() {
 
       if (error) {
         console.error(error)
-        setError('Failed to load teams')
+        setError('Failed to load clubs')
       } else {
         setTeams(data ?? [])
       }
@@ -37,10 +37,10 @@ export default function SelectClubPage() {
       setLoading(false)
     }
 
-    loadTeams()
+    fetchTeams()
   }, [user])
 
-  const selectTeam = async (teamId: string) => {
+  const handleSelect = async (teamId: string) => {
     if (!user) return
 
     const { error } = await supabase
@@ -80,7 +80,19 @@ export default function SelectClubPage() {
         {teams.map(team => (
           <li key={team.id} style={{ marginBottom: 8 }}>
             <button
-              onClick={() => selectTeam(team.id)}
+              onClick={() => handleSelect(team.id)}
               style={{
                 padding: '8px 12px',
-                wi
+                width: '100%',
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              {team.name}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </main>
+  )
+}
