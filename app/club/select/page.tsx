@@ -8,7 +8,6 @@ import { useAuth } from '../../../lib/AuthContext'
 type Club = {
   id: string
   name: string
-  location: string | null
 }
 
 export default function SelectClub() {
@@ -28,7 +27,7 @@ export default function SelectClub() {
 
     const loadClubs = async () => {
       const { data, error } = await supabase
-        .from('clubs')
+        .from('teams')
         .select('id, name, location')
         .order('name')
 
