@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../lib/AuthContext'
-import { useRouter } from 'next/navigation'
 
 type Club = {
   id: string
@@ -17,11 +17,15 @@ export default function SelectClub() {
 
   const [clubs, setClubs] = useState<Club[]>([])
   const [search, setSearch] = useState('')
-  const [selectedClub, setSelectedClub] = useState<Club | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!user) {
+      router.replace('/welcome')
+      return
+    }
+
     const loadClubs = async () => {
       const { data, error } = await supabase
         .from('clubs')
@@ -29,39 +33,35 @@ export default function SelectClub() {
         .order('name')
 
       if (error) {
-        setError(error.message)
+        setError('Failed to load clubs')
       } else {
-        setClubs(data ?? [])
+        setClubs(data || [])
       }
 
       setLoading(false)
     }
 
     loadClubs()
-  }, [])
+  }, [user, router])
 
-  if (!user) {
-    return <p style={{ padding: 24 }}>Loading…</p>
-  }
-
-  const filteredClubs = clubs.filter((club) =>
-    club.name.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const confirmClub = async () => {
-    if (!selectedClub) return
+  const selectClub = async (clubId: string) => {
+    if (!user) return
 
     const { error } = await supabase
       .from('profiles')
-      .update({ club_id: selectedClub.id })
+      .update({ club_id: clubId })
       .eq('id', user.id)
 
     if (error) {
-      setError(error.message)
+      setError('Failed to save club')
       return
     }
 
     router.replace('/')
+  }
+
+  if (loading) {
+    return <p style={{ padding: 24 }}>Loading clubs…</p>
   }
 
   return (
@@ -69,41 +69,28 @@ export default function SelectClub() {
       <h1>Select your club</h1>
 
       <input
-        placeholder="Search club name"
+        placeholder="Search clubs…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        style={{ padding: 8, width: '100%', marginBottom: 16 }}
       />
-
-      <div style={{ marginTop: 16 }}>
-        {loading && <p>Loading clubs…</p>}
-
-        {!loading &&
-          filteredClubs.map((club) => (
-            <div key={club.id} style={{ marginBottom: 8 }}>
-              <label>
-                <input
-                  type="radio"
-                  name="club"
-                  checked={selectedClub?.id === club.id}
-                  onChange={() => setSelectedClub(club)}
-                />
-                {' '}
-                {club.name}
-                {club.location ? ` (${club.location})` : ''}
-              </label>
-            </div>
-          ))}
-      </div>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      <button
-        disabled={!selectedClub}
-        onClick={confirmClub}
-        style={{ marginTop: 16 }}
-      >
-        Join club
-      </button>
+      <ul>
+        {clubs
+          .filter(c =>
+            c.name.toLowerCase().includes(search.toLowerCase())
+          )
+          .map(club => (
+            <li key={club.id} style={{ marginBottom: 8 }}>
+              <button onClick={() => selectClub(club.id)}>
+                {club.name}
+                {club.location ? ` (${club.location})` : ''}
+              </button>
+            </li>
+          ))}
+      </ul>
     </main>
   )
 }
