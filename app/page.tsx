@@ -1,15 +1,43 @@
-const { data } = await supabase
-  .from('profiles')
-  .select('id, club_id')
-  .eq('id', user.id)
-  .single()
+'use client'
 
-if (!data) {
-  router.replace('/profile/create')
-  return
-}
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '../lib/AuthContext'
 
-if (!data.club_id) {
-  router.replace('/club/select')
-  return
+export default function HomePage() {
+  const { user, profile, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (loading) return
+
+    // Not signed in → go to auth
+    if (!user) {
+      router.replace('/auth')
+      return
+    }
+
+    // Signed in but no profile yet
+    if (!profile) {
+      router.replace('/profile/create')
+      return
+    }
+
+    // Profile exists but no club selected
+    if (!profile.club_id) {
+      router.replace('/club/select')
+      return
+    }
+  }, [user, profile, loading, router])
+
+  if (loading) {
+    return <p style={{ padding: 24 }}>Loading…</p>
+  }
+
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Project 90</h1>
+      <p>Home (temporary)</p>
+    </main>
+  )
 }
