@@ -2,94 +2,85 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../../lib/supabase'
-import { useAuth } from '../../../lib/AuthContext'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/AuthContext'
 
-type Club = {
+type Team = {
   id: string
   name: string
 }
 
-export default function SelectClub() {
+export default function SelectClubPage() {
   const { user } = useAuth()
   const router = useRouter()
 
-  const [clubs, setClubs] = useState<Club[]>([])
-  const [search, setSearch] = useState('')
+  const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user) {
-      router.replace('/welcome')
-      return
-    }
+    if (!user) return
 
-    const loadClubs = async () => {
+    const loadTeams = async () => {
       const { data, error } = await supabase
         .from('teams')
-        .select('id, name, location')
+        .select('id, name')
         .order('name')
 
       if (error) {
-        setError('Failed to load clubs')
+        console.error(error)
+        setError('Failed to load teams')
       } else {
-        setClubs(data || [])
+        setTeams(data ?? [])
       }
 
       setLoading(false)
     }
 
-    loadClubs()
-  }, [user, router])
+    loadTeams()
+  }, [user])
 
-  const selectClub = async (clubId: string) => {
+  const selectTeam = async (teamId: string) => {
     if (!user) return
 
     const { error } = await supabase
       .from('profiles')
-      .update({ club_id: clubId })
+      .update({ club_id: teamId })
       .eq('id', user.id)
 
     if (error) {
-      setError('Failed to save club')
+      alert('Failed to save club')
       return
     }
 
     router.replace('/')
   }
 
+  if (!user) {
+    return <p style={{ padding: 24 }}>Not signed in</p>
+  }
+
   if (loading) {
     return <p style={{ padding: 24 }}>Loading clubs…</p>
+  }
+
+  if (error) {
+    return <p style={{ padding: 24 }}>{error}</p>
   }
 
   return (
     <main style={{ padding: 24 }}>
       <h1>Select your club</h1>
 
-      <input
-        placeholder="Search clubs…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ padding: 8, width: '100%', marginBottom: 16 }}
-      />
+      {teams.length === 0 && (
+        <p>No clubs found. Add teams in Supabase.</p>
+      )}
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <ul>
-        {clubs
-          .filter(c =>
-            c.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map(club => (
-            <li key={club.id} style={{ marginBottom: 8 }}>
-              <button onClick={() => selectClub(club.id)}>
-                {club.name}
-                {club.location ? ` (${club.location})` : ''}
-              </button>
-            </li>
-          ))}
-      </ul>
-    </main>
-  )
-}
+      <ul style={{ marginTop: 16 }}>
+        {teams.map(team => (
+          <li key={team.id} style={{ marginBottom: 8 }}>
+            <button
+              onClick={() => selectTeam(team.id)}
+              style={{
+                padding: '8px 12px',
+                wi
