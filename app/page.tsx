@@ -1,52 +1,33 @@
-'use client'
+import { redirect } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/lib/AuthContext'
+export default async function HomePage() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function HomePage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user) {
-      router.replace('/welcome')
-      return
-    }
-
-    const checkProfile = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('club_id')
-        .eq('id', user.id)
-        .single()
-
-      if (error || !data) {
-        router.replace('/profile/create')
-        return
-      }
-
-      if (!data.club_id) {
-        router.replace('/club/select')
-        return
-      }
-
-      setLoading(false)
-    }
-
-    checkProfile()
-  }, [user, router])
-
-  if (loading) {
-    return <p style={{ padding: 24 }}>Loading…</p>
+  if (!user) {
+    redirect("/welcome");
   }
 
-  return (
-    <main style={{ padding: 24 }}>
-      <h1>Project 90</h1>
-      <p>Home (temporary)</p>
-    </main>
-  )
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role, club_id")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile) {
+    redirect("/welcome");
+  }
+
+  if (profile.role === "player" && !profile.club_id) {
+    redirect("/club/select");
+  }
+
+  if (profile.role === "player") {
+    redirect("/player/dashboard");
+  }
+
+  // fallback
+  return <p>Redirecting...</p>;
 }
