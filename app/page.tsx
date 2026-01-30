@@ -1,33 +1,47 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-export default async function HomePage() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function HomePage() {
+  const router = useRouter();
 
-  if (!user) {
-    redirect("/welcome");
-  }
+  useEffect(() => {
+    const run = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("role, club_id")
-    .eq("id", user.id)
-    .single();
+      if (!user) {
+        router.replace("/welcome");
+        return;
+      }
 
-  if (error || !profile) {
-    redirect("/welcome");
-  }
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role, club_id")
+        .eq("id", user.id)
+        .single();
 
-  if (profile.role === "player" && !profile.club_id) {
-    redirect("/club/select");
-  }
+      if (error || !profile) {
+        router.replace("/welcome");
+        return;
+      }
 
-  if (profile.role === "player") {
-    redirect("/player/dashboard");
-  }
+      if (profile.role === "player" && !profile.club_id) {
+        router.replace("/club/select");
+        return;
+      }
 
-  // fallback
-  return <p>Redirecting...</p>;
+      if (profile.role === "player") {
+        router.replace("/player/dashboard");
+        return;
+      }
+    };
+
+    run();
+  }, [router]);
+
+  return <p>Loading...</p>;
 }
