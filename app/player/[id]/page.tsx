@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
 
 export default async function PlayerProfile({
@@ -6,7 +6,6 @@ export default async function PlayerProfile({
 }: {
   params: { id: string };
 }) {
-  const supabase = createClient();
 
   // 1️⃣ Must be logged in
   const {
