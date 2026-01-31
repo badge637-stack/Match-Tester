@@ -29,13 +29,22 @@ function AuthInner() {
       return
     }
 
+    // save role on the user
     if (role) {
       await supabase.auth.updateUser({
         data: { role },
       })
     }
 
-    router.replace('/')
+    // 🔴 CRITICAL FIX:
+    // wait until Supabase confirms the session exists
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (session) {
+      router.replace('/')
+    }
   }
 
   return (
