@@ -2,46 +2,23 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "../lib/AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const run = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    if (loading) return;
 
-      if (!user) {
-        router.replace("/welcome");
-        return;
-      }
+    if (!user) {
+      router.replace("/welcome");
+      return;
+    }
 
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role, club_id")
-        .eq("id", user.id)
-        .single();
-
-      if (error || !profile) {
-        router.replace("/welcome");
-        return;
-      }
-
-      if (profile.role === "player" && !profile.club_id) {
-        router.replace("/club/select");
-        return;
-      }
-
-      if (profile.role === "player") {
-        router.replace("/player/dashboard");
-        return;
-      }
-    };
-
-    run();
-  }, [router]);
+    // TEMP: send logged-in users somewhere safe
+    router.replace("/player/dashboard");
+  }, [user, loading, router]);
 
   return <p>Loading...</p>;
 }
