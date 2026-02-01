@@ -1,24 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "../lib/AuthContext";
 
 export default function HomePage() {
-  const router = useRouter();
   const { user, loading } = useAuth();
 
-  useEffect(() => {
-    if (loading) return;
+  if (loading) {
+    return <p>Loading auth…</p>;
+  }
 
-    if (!user) {
-      router.replace("/welcome");
-      return;
-    }
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>Home (debug mode)</h1>
 
-    // TEMP: send logged-in users somewhere safe
-    router.replace("/player/dashboard");
-  }, [user, loading, router]);
-
-  return <p>Loading...</p>;
+      {user ? (
+        <>
+          <p>Logged in as: {user.email}</p>
+          <p>You should NOT be redirected anywhere.</p>
+        </>
+      ) : (
+        <p>Not logged in</p>
+      )}
+    </main>
+  );
 }
