@@ -1,25 +1,18 @@
-import { supabase } from "@/lib/supabase";
-import { redirect } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
-export default async function PlayerProfile({
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export default async function PlayerPage({
   params,
 }: {
   params: { id: string };
 }) {
-
-  // 1️⃣ Must be logged in
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/welcome");
-  }
-
-  // 2️⃣ Fetch player profile (PUBLIC FIELDS ONLY)
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, display_name, position, club_id")
+    .select("id, display_name, position")
     .eq("id", params.id)
     .single();
 
@@ -28,18 +21,10 @@ export default async function PlayerProfile({
   }
 
   return (
-    <main style={{ padding: "2rem" }}>
+    <main style={{ padding: 24 }}>
       <h1>{profile.display_name}</h1>
-
-      <p>
-        <strong>Position:</strong>{" "}
-        {profile.position || "Not specified"}
-      </p>
-
-      <p>
-        <strong>Club ID:</strong>{" "}
-        {profile.club_id || "No club"}
-      </p>
+      <p>Position: {profile.position}</p>
+      <p>Player ID: {profile.id}</p>
     </main>
   );
 }
