@@ -8,6 +8,7 @@ export default function PlayerDashboard() {
   const { user, loading } = useAuth()
 
   const [displayName, setDisplayName] = useState<string | null>(null)
+const [position, setPosition] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -15,13 +16,21 @@ export default function PlayerDashboard() {
     const fetchName = async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('display_name')
+        .select(`
+  display_name,
+  players (
+    position
+  )
+`)
+
         .eq('id', user.id)
         .single()
 
       if (!error) {
-        setDisplayName(data.display_name)
-      }
+  setDisplayName(data.display_name)
+  setPosition(data.players?.position ?? null)
+}
+
     }
 
     fetchName()
@@ -35,9 +44,13 @@ export default function PlayerDashboard() {
     return <div>Please sign in to view your dashboard.</div>
   }
 
-  return (
+return (
+  <div>
+    Player dashboard — {displayName}
     <div>
-      Player dashboard{displayName ? ` — ${displayName}` : ''}
+      Position: {position ?? '—'}
     </div>
-  )
+  </div>
+)
+
 }
