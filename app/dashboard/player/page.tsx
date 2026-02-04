@@ -27,4 +27,35 @@ export default function PlayerDashboard() {
 
       if (!error && data) {
         setDisplayName(data.display_name)
-        setPosition(data.players
+        setPosition(data.players?.position ?? null)
+      }
+    }
+
+    fetchProfile()
+  }, [user])
+
+  if (loading) {
+    return <div>Loading…</div>
+  }
+
+  if (!user) {
+    return <div>Please sign in to view your dashboard.</div>
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-xl mx-auto bg-white rounded-xl shadow-sm p-6 space-y-2">
+        <h1 className="text-2xl font-bold">
+          {displayName ?? 'Player'}
+        </h1>
+
+        <p className="text-gray-600">
+          Position:{' '}
+          <span className="font-medium">
+            {position ?? '—'}
+          </span>
+        </p>
+      </div>
+    </div>
+  )
+}
