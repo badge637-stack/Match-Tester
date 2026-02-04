@@ -27,7 +27,7 @@ export default function PlayerDashboard() {
 
       if (!error && data) {
         setDisplayName(data.display_name)
-        setPosition(data.players?.position ?? null)
+        setPosition(data.players?.[0]?.position ?? null)
       }
     }
 
@@ -51,11 +51,4 @@ export default function PlayerDashboard() {
 
         <p className="text-gray-600">
           Position:{' '}
-          <span className="font-medium">
-            {position ?? '—'}
-          </span>
-        </p>
-      </div>
-    </div>
-  )
-}
+          <span className="font
