@@ -6,36 +6,90 @@ import { useAuth } from '@/lib/AuthContext'
 
 export default function PlayerDashboard() {
   const { user, loading } = useAuth()
+
+  const [displayName, setDisplayName] = useState<string | null>(null)
   const [position, setPosition] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
 
-    const fetchPlayer = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      // Get player row (primary entity for this dashboard)
+      const { data: player, error: playerError } = await supabase
         .from('players')
-        .select('position, profile_id')
+        .select('position')
         .eq('profile_id', user.id)
         .single()
 
-      console.log('PLAYER QUERY RESULT:', data, error)
+      if (!playerError && player) {
+        setPosition(player.position)
+      }
 
-      if (data) {
-        setPosition(data.position)
+      // Get profile display name
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single()
+
+      if (!profileError && profile) {
+        setDisplayName(profile.display_name)
       }
     }
 
-    fetchPlayer()
+    fetchData()
   }, [user])
 
-  if (loading) return <div>Loading…</div>
-  if (!user) return <div>Not signed in</div>
+  if (loading) {
+    return <div className="p-6">Loading…</div>
+  }
+
+  if (!user) {
+    return <div className="p-6">Please sign in to view your dashboard.</div>
+  }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Player dashboard</h1>
-      <p>Auth user id: {user.id}</p>
-      <p>Position: {position ?? '—'}</p>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-3xl mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-sm p-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {displayName ?? 'Player'}
+            </h1>
+            <p className="text-gray-500">Player Dashboard</p>
+          </div>
+
+          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+            {position ?? '—'}
+          </span>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm text-gray-500">Appearances</p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm text-gray-500">Goals</p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm text-gray-500">Points</p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <p className="text-sm text-gray-500">MOTM</p>
+            <p className="text-2xl font-bold text-gray-900">—</p>
+          </div>
+        </div>
+
+      </div>
     </div>
   )
 }
