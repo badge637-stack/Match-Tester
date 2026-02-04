@@ -6,8 +6,6 @@ import { useAuth } from '@/lib/AuthContext'
 
 export default function PlayerDashboard() {
   const { user, loading } = useAuth()
-
-  const [displayName, setDisplayName] = useState<string | null>(null)
   const [position, setPosition] = useState<string | null>(null)
 
   useEffect(() => {
@@ -16,46 +14,28 @@ export default function PlayerDashboard() {
     const fetchPlayer = async () => {
       const { data, error } = await supabase
         .from('players')
-        .select(`
-          position,
-          profiles (
-            display_name
-          )
-        `)
+        .select('position, profile_id')
         .eq('profile_id', user.id)
         .single()
 
-      if (!error && data) {
+      console.log('PLAYER QUERY RESULT:', data, error)
+
+      if (data) {
         setPosition(data.position)
-        setDisplayName(data.profiles?.[0]?.display_name ?? null)
       }
     }
 
     fetchPlayer()
   }, [user])
 
-  if (loading) {
-    return <div>Loading…</div>
-  }
-
-  if (!user) {
-    return <div>Please sign in to view your dashboard.</div>
-  }
+  if (loading) return <div>Loading…</div>
+  if (!user) return <div>Not signed in</div>
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-xl mx-auto bg-white rounded-xl shadow-sm p-6 space-y-2">
-        <h1 className="text-2xl font-bold">
-          {displayName ?? 'Player'}
-        </h1>
-
-        <p className="text-gray-600">
-          Position:{' '}
-          <span className="font-medium">
-            {position ?? '—'}
-          </span>
-        </p>
-      </div>
+    <div style={{ padding: 24 }}>
+      <h1>Player dashboard</h1>
+      <p>Auth user id: {user.id}</p>
+      <p>Position: {position ?? '—'}</p>
     </div>
   )
 }
