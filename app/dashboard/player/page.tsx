@@ -13,25 +13,25 @@ export default function PlayerDashboard() {
   useEffect(() => {
     if (!user) return
 
-    const fetchProfile = async () => {
+    const fetchPlayer = async () => {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('players')
         .select(`
-          display_name,
-          players:players_profile_id_fkey (
-            position
+          position,
+          profiles (
+            display_name
           )
         `)
-        .eq('id', user.id)
+        .eq('profile_id', user.id)
         .single()
 
       if (!error && data) {
-        setDisplayName(data.display_name)
-        setPosition(data.players?.[0]?.position ?? null)
+        setPosition(data.position)
+        setDisplayName(data.profiles?.display_name ?? null)
       }
     }
 
-    fetchProfile()
+    fetchPlayer()
   }, [user])
 
   if (loading) {
