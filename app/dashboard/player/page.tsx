@@ -27,7 +27,7 @@ export default function PlayerDashboard() {
 
       if (!error && data) {
         setPosition(data.position)
-        setDisplayName(data.profiles?.display_name ?? null)
+        setDisplayName(data.profiles?.[0]?.display_name ?? null)
       }
     }
 
