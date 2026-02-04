@@ -8,49 +8,23 @@ export default function PlayerDashboard() {
   const { user, loading } = useAuth()
 
   const [displayName, setDisplayName] = useState<string | null>(null)
-const [position, setPosition] = useState<string | null>(null)
+  const [position, setPosition] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
 
-    const fetchName = async () => {
+    const fetchProfile = async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select(`
-  display_name,
-  players (
-    position
-  )
-`)
-
+          display_name,
+          players (
+            position
+          )
+        `)
         .eq('id', user.id)
         .single()
 
-      if (!error) {
-  setDisplayName(data.display_name)
-  setPosition(data.players?.position ?? null)
-}
-
-    }
-
-    fetchName()
-  }, [user])
-
-  if (loading) {
-    return <div>Loading…</div>
-  }
-
-  if (!user) {
-    return <div>Please sign in to view your dashboard.</div>
-  }
-
-return (
-  <div>
-    Player dashboard — {displayName}
-    <div>
-      Position: {position ?? '—'}
-    </div>
-  </div>
-)
-
-}
+      if (!error && data) {
+        setDisplayName(data.display_name)
+        setPosition(data.players
