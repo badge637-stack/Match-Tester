@@ -18,7 +18,7 @@ export default function PlayerDashboard() {
         .from('profiles')
         .select(`
           display_name,
-          players (
+          players:players_profile_id_fkey (
             position
           )
         `)
