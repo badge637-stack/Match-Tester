@@ -13,20 +13,27 @@ export default function PlayerDashboard() {
   useEffect(() => {
     if (!user) return
 
-    const fetchPlayer = async () => {
-      const { data, error } = await supabase
+    const fetchData = async () => {
+      // 1️⃣ Get player row (position)
+      const { data: player } = await supabase
         .from('players')
-        .select('position, profiles(display_name)')
+        .select('position')
         .eq('profile_id', user.id)
         .single()
 
-      if (!error && data) {
-        setPosition(data.position ?? null)
-        setDisplayName(data.profiles?.display_name ?? null)
-      }
+      setPosition(player?.position ?? null)
+
+      // 2️⃣ Get profile row (display name)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single()
+
+      setDisplayName(profile?.display_name ?? null)
     }
 
-    fetchPlayer()
+    fetchData()
   }, [user])
 
   if (loading) {
@@ -45,7 +52,10 @@ export default function PlayerDashboard() {
         </h1>
         <p className="text-gray-400 mt-1">Player Dashboard</p>
         <p className="mt-2 text-lg">
-          Position: <span className="font-semibold">{position ?? '—'}</span>
+          Position:{' '}
+          <span className="font-semibold">
+            {position ?? '—'}
+          </span>
         </p>
       </div>
 
