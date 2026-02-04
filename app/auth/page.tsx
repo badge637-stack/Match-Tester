@@ -1,93 +1,67 @@
 'use client'
 
-import { Suspense, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supabase'
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
-function AuthInner() {
-  const searchParams = useSearchParams()
+export default function AuthPage() {
   const router = useRouter()
-  const role = searchParams.get('role') // 'player' | 'fan'
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  const handleAuth = async (type: 'signin' | 'signup') => {
+  const signIn = async () => {
     setError(null)
-    setLoading(true)
 
-    const result =
-      type === 'signup'
-        ? await supabase.auth.signUp({ email, password })
-        : await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-    if (result.error) {
-      setError(result.error.message)
-      setLoading(false)
+    if (error) {
+      setError(error.message)
       return
     }
 
-    // save role on the user
-    if (role) {
-      await supabase.auth.updateUser({
-        data: { role },
-      })
-    }
+    // 🔑 WAIT until session exists
+    const { data } = await supabase.auth.getSession()
 
-    // 🔴 CRITICAL FIX:
-    // wait until Supabase confirms the session exists
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (session) {
-      router.replace('/')
+    if (data.session) {
+      router.replace('/dashboard/player')
     }
   }
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1>{role === 'player' ? 'Player' : 'Fan'} sign in</h1>
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="bg-gray-900 p-6 rounded-xl w-full max-w-sm space-y-4">
+        <h1 className="text-2xl font-bold">Sign in</h1>
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <input
+          className="w-full p-2 rounded bg-black border border-gray-700"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
 
-      <br />
+        <input
+          className="w-full p-2 rounded bg-black border border-gray-700"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        {error && (
+          <p className="text-red-500 text-sm">{error}</p>
+        )}
 
-      <br />
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <button disabled={loading} onClick={() => handleAuth('signin')}>
-        Sign in
-      </button>
-
-      <br />
-
-      <button disabled={loading} onClick={() => handleAuth('signup')}>
-        Create account
-      </button>
-    </main>
-  )
-}
-
-export default function AuthPage() {
-  return (
-    <Suspense fallback={<p style={{ padding: 24 }}>Loading…</p>}>
-      <AuthInner />
-    </Suspense>
+        <button
+          onClick={signIn}
+          className="w-full bg-white text-black py-2 rounded font-semibold"
+        >
+          Sign in
+        </button>
+      </div>
+    </div>
   )
 }
