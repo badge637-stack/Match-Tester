@@ -36,7 +36,13 @@ export default function PlayerDashboard() {
 
       if (!error && data) {
         setPosition(data.position ?? null)
-        setDisplayName(data.profiles?.display_name ?? null)
+
+        // 👇 profiles is ALWAYS an array
+        const profile = Array.isArray(data.profiles)
+          ? data.profiles[0]
+          : null
+
+        setDisplayName(profile?.display_name ?? null)
       }
 
       setLoading(false)
@@ -64,25 +70,24 @@ export default function PlayerDashboard() {
           </h1>
           <p className="text-white/70 mt-1">Player Dashboard</p>
           <p className="mt-3 inline-block rounded bg-white/10 px-3 py-1 text-sm">
-            Position: <span className="font-semibold">{position ?? '—'}</span>
+            Position:{' '}
+            <span className="font-semibold">
+              {position ?? '—'}
+            </span>
           </p>
         </div>
 
-        {/* Stats grid */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
           <StatCard title="Appearances" value="—" />
           <StatCard title="Goals" value="—" />
           <StatCard title="Points" value="—" />
           <StatCard title="MOTM" value="—" />
-
         </div>
       </div>
     </div>
   )
 }
-
-/* ---------- Small reusable stat card ---------- */
 
 function StatCard({ title, value }: { title: string; value: string }) {
   return (
