@@ -1,24 +1,20 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { AuthProvider } from "../lib/AuthContext";
+import './globals.css'
 
-export const metadata: Metadata = {
-  title: "Project 90",
-  description: "Your game. Your glory.",
-};
+export const metadata = {
+  title: 'Match Tester',
+  description: 'Project 90',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+      <body className="bg-gray-950 text-gray-100 min-h-screen">
+        {children}
       </body>
     </html>
-  );
+  )
 }
