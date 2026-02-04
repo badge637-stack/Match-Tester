@@ -1,49 +1,50 @@
-"use client";
+'use client'
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "./supabase";
-import type { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
 
 type AuthContextType = {
-  user: User | null;
-  loading: boolean;
-};
+  user: User | null
+  loading: boolean
+}
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-});
+})
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 1️⃣ Restore session on load
+    // ✅ Restore session on load
     supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setLoading(false);
-    });
+      setUser(data.session?.user ?? null)
+      setLoading(false) // 🔑 THIS WAS MISSING / NEVER HIT
+    })
 
-    // 2️⃣ Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    // ✅ Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
 
     return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+      listener.subscription.unsubscribe()
+    }
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  return useContext(AuthContext)
 }
