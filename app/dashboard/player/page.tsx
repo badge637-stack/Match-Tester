@@ -13,31 +13,20 @@ export default function PlayerDashboard() {
   useEffect(() => {
     if (!user) return
 
-    const fetchData = async () => {
-      // Get player row (primary entity for this dashboard)
-      const { data: player, error: playerError } = await supabase
+    const fetchPlayer = async () => {
+      const { data, error } = await supabase
         .from('players')
-        .select('position')
+        .select('position, profiles(display_name)')
         .eq('profile_id', user.id)
         .single()
 
-      if (!playerError && player) {
-        setPosition(player.position)
-      }
-
-      // Get profile display name
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', user.id)
-        .single()
-
-      if (!profileError && profile) {
-        setDisplayName(profile.display_name)
+      if (!error && data) {
+        setPosition(data.position ?? null)
+        setDisplayName(data.profiles?.display_name ?? null)
       }
     }
 
-    fetchData()
+    fetchPlayer()
   }, [user])
 
   if (loading) {
@@ -45,50 +34,31 @@ export default function PlayerDashboard() {
   }
 
   if (!user) {
-    return <div className="p-6">Please sign in to view your dashboard.</div>
+    return <div className="p-6">Please sign in</div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto p-6 space-y-6">
+      <div className="bg-gray-900 rounded-xl p-6 shadow">
+        <h1 className="text-3xl font-bold">
+          {displayName ?? 'Player'}
+        </h1>
+        <p className="text-gray-400 mt-1">Player Dashboard</p>
+        <p className="mt-2 text-lg">
+          Position: <span className="font-semibold">{position ?? '—'}</span>
+        </p>
+      </div>
 
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {displayName ?? 'Player'}
-            </h1>
-            <p className="text-gray-500">Player Dashboard</p>
+      <div className="grid grid-cols-2 gap-4">
+        {['Appearances', 'Goals', 'Points', 'MOTM'].map(stat => (
+          <div
+            key={stat}
+            className="bg-gray-900 rounded-xl p-4 text-center"
+          >
+            <p className="text-sm text-gray-400">{stat}</p>
+            <p className="text-2xl font-bold mt-1">—</p>
           </div>
-
-          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-            {position ?? '—'}
-          </span>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-sm text-gray-500">Appearances</p>
-            <p className="text-2xl font-bold text-gray-900">—</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-sm text-gray-500">Goals</p>
-            <p className="text-2xl font-bold text-gray-900">—</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-sm text-gray-500">Points</p>
-            <p className="text-2xl font-bold text-gray-900">—</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <p className="text-sm text-gray-500">MOTM</p>
-            <p className="text-2xl font-bold text-gray-900">—</p>
-          </div>
-        </div>
-
+        ))}
       </div>
     </div>
   )
